@@ -38,12 +38,27 @@ img_height =224
 img_width = 224
 
 
-datagen = tf.keras.preprocessing.image.ImageDataGenerator(
-    preprocessing_function=tf.keras.applications.densenet.preprocess_input)
+# =============================================================================
+#  Set Pre processing function for datagenerator
+#  Pre-processing fucnction should choose appropriate function that will train 
+#  the revelent model
+#  for example training Densenet 121 layered model use 
+#  tf.keras.applications.densenet.preprocess_input as pre-processing function
+# =============================================================================
 
-test_dir='/media/james/DATA/PHD_Thesis_Model/Phd_paper3/ds/test'
-ext_test='/media/james/DATA/PHD_Thesis_Model/Phd_paper3/external_test'
-ext_test1='/media/james/DATA/PHD_Thesis_Model/Phd_paper3/external_test2'
+
+datagen = tf.keras.preprocessing.image.ImageDataGenerator(
+    preprocessing_function='appropriate pre-processing function here')
+
+
+# =============================================================================
+#  Load the intramural and two extramural data from data directory
+# =============================================================================
+
+
+test_dir='intramural test data path here'
+ext_test='extramural test data path here'
+ext_test1='extramural test data path here'
 
 test_ds_ho=datagen.flow_from_directory(
         # This is the target directory
@@ -88,40 +103,47 @@ test_ds_et1=datagen.flow_from_directory(
         interpolation='bicubic'
         )
 
-model = '/media/james/DATA/PHD_Thesis_Model/Phd_paper3/final_model_tb_vs_normal/D169_normal_tb'
+# =============================================================================
+#  Load model
+# =============================================================================
 
-
+model = 'path to model from model directory'
 model=tf.keras.models.load_model(model)
 
+# =============================================================================
+#  Holdout test set IMTS1
+# =============================================================================
 
-
-#holdout test set 
 y_pred=model.predict(test_ds_ho)
 y_pred_original=model.predict(test_ds_ho)
 y_true=test_ds_ho.labels
 y_pred = np.argmax(y_pred, axis = 1)
 y_pred_proba=y_pred_original[:,1]
 
+# =============================================================================
+# external test set1 EMTS1
+# =============================================================================
 
-
-#external test set1 
 y_pred1=model.predict(test_ds_et)
 y_pred_original1=model.predict(test_ds_et)
 y_true1=test_ds_et.labels
 y_pred1 = np.argmax(y_pred1, axis = 1)
 y_pred_proba1=y_pred_original1[:,1]
 
+# =============================================================================
+# external test set1 EMTS2
+# =============================================================================
 
-
-#external test set2
 y_pred2=model.predict(test_ds_et1)
 y_pred_original2=model.predict(test_ds_et1)
 y_true2=test_ds_et1.labels
 y_pred2 = np.argmax(y_pred2, axis = 1)
 y_pred_proba2=y_pred_original2[:,1]
 
+# =============================================================================
+# ploting ROC
+# =============================================================================
 
-# Cavity
 from scipy.stats import sem, t
 from numpy import interp
 
@@ -144,8 +166,11 @@ roc_auc_score2 = dict()
 mean_fpr2 = np.linspace(0, 1, 100)
 
 
-
 num_classes=2
+
+# =============================================================================
+# ploting ROC IMTS
+# =============================================================================
 
 for i in range(num_classes):
     fpr[i], tpr[i], _ = roc_curve(y_true, y_pred_proba)
@@ -164,7 +189,9 @@ tprs_lower = np.maximum(mean_tpr - h, 0)
 tprs_upper[0]=0.0
 tprs_lower[99]=1.0
 
-# External Test set
+# =============================================================================
+# ploting ROC EMTS1
+# =============================================================================
 
 for i in range(num_classes):
     fpr1[i], tpr1[i], _ = roc_curve(y_true1, y_pred_proba1)
@@ -183,11 +210,9 @@ tprs_lower1 = np.maximum(mean_tpr1 - h1, 0)
 tprs_upper1[0]=0.0
 tprs_lower1[99]=1.0
 
-
-
-
-# External Test set2
-
+# =============================================================================
+# ploting ROC EMTS2
+# =============================================================================
 
 for i in range(num_classes):
     fpr2[i], tpr2[i], _ = roc_curve(y_true2, y_pred_proba2)
@@ -206,7 +231,9 @@ tprs_lower2 = np.maximum(mean_tpr2 - h2, 0)
 tprs_upper2[0]=0.0
 tprs_lower2[99]=1.0
 
-# plotting 
+# =============================================================================
+# ploting ROC 
+# =============================================================================
 
 fig=plt.figure(figsize=(15,10), dpi=300)
 ax = fig.add_subplot(1, 1, 1)
@@ -225,17 +252,17 @@ ax.grid(which='both')
 lw = 2.5
 legend_properties = {'size':16,'weight':'bold'}
 
-plt.plot(fpr[1], tpr[1], '*-', color='xkcd:royal blue', label=' AUC (IMTS) :  %0.3f CI [%0.3f - %0.3f]' % (roc_auc_score[1], 0.997,1.000),lw = lw,alpha = 1)#, label=r'Mean ROC (AUC = %0.2f $\pm$ %0.2f)' % (mean_auc, std_auc),)
+plt.plot(fpr[1], tpr[1], '*-', color='xkcd:royal blue', label=' AUC (IMTS) :  %0.3f CI [%0.3f - %0.3f]' % (roc_auc_score[1], 0.997,1.000),lw = lw,alpha = 1)
 plt.fill_between(mean_fpr, tprs_lower, tprs_upper, color = 'xkcd:royal blue', alpha = 0.3,
                     label=r'95% CI')
 
 
-plt.plot(fpr1[1], tpr1[1], '*-', color='xkcd:dark maroon', label=' AUC (EMTS1) :  %0.3f CI [%0.3f - %0.3f]' % (roc_auc_score1[1], 0.876,0.912),lw = lw,alpha = 1)#, label=r'Mean ROC (AUC = %0.2f $\pm$ %0.2f)' % (mean_auc, std_auc),)
+plt.plot(fpr1[1], tpr1[1], '*-', color='xkcd:dark maroon', label=' AUC (EMTS1) :  %0.3f CI [%0.3f - %0.3f]' % (roc_auc_score1[1], 0.876,0.912),lw = lw,alpha = 1)
 plt.fill_between(mean_fpr1, tprs_lower1, tprs_upper1, color = 'xkcd:dark maroon', alpha = 0.3,
                     label=r'95% CI')
 
 
-plt.plot(fpr2[1], tpr2[1], '*-', color='xkcd:mulberry', label=' AUC (EMTS2) :  %0.3f CI [%0.3f - %0.3f]' % (roc_auc_score2[1], 0.807,0.924),lw = lw,alpha = 1)#, label=r'Mean ROC (AUC = %0.2f $\pm$ %0.2f)' % (mean_auc, std_auc),)
+plt.plot(fpr2[1], tpr2[1], '*-', color='xkcd:mulberry', label=' AUC (EMTS2) :  %0.3f CI [%0.3f - %0.3f]' % (roc_auc_score2[1], 0.807,0.924),lw = lw,alpha = 1)
 plt.fill_between(mean_fpr2, tprs_lower2, tprs_upper2, color = 'xkcd:mulberry', alpha = 0.3,
                     label=r'95% CI')
 
@@ -248,5 +275,5 @@ plt.xlabel('False Positive Rate',fontsize=20)
 plt.ylabel('True Positive Rate',fontsize=20)
 
 plt.legend(loc="lower right",fontsize=20, prop=legend_properties)
-plt.savefig('/media/james/DATA/PHD_Thesis_Model/Phd_paper3/roc_images/d169_roc_ci.png',bbox_inches='tight')
+plt.savefig('save fig directory',bbox_inches='tight')
 plt.show()
