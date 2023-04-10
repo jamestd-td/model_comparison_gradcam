@@ -124,6 +124,8 @@ print(ground_trouth)
 #  Base model sould be load from base model directory with include_top = False
 #  for initializing the model, first train the added layers and then save the model
 #  for training session 2
+#  Training from session 2 and 3, comment code from line # 145 to 149 as model is already
+#  have those layers and add outputs=base_model.output
 #  load saved model from saved model directory and train N1 layers (N1 is varying from 
 #  model to model ( readme doc) and save the trained model
 #  For training session 3
@@ -142,9 +144,16 @@ for layer in base_model.layers:
         layer.trainable = True
 
 inputs = base_model.input
-outputs = base_model.output
-
+x= tf.reduce_mean(base_model.output, axis=[1,2])
+x= tf.keras.layers.Dense(128, activation="relu")(x)
+x = tf.keras.layers.Dropout(0.4)(x)
+outputs = tf.keras.layers.Dense(2, activation="softmax")(x)
 model = tf.keras.Model(inputs, outputs)
+
+# =============================================================================
+#  Set the Model layers for training ( appropriate N1 and N2 Layers)
+# =============================================================================
+
 for layer in model.layers['get appropriate number from readme table']:
    layer.trainable = True
 model.compile(loss=tf.keras.losses.CategoricalCrossentropy(),
